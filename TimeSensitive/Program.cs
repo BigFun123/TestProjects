@@ -16,18 +16,18 @@ namespace TimingSensitiveDemo
             string correctPassword = "MySecurePassword123!";
 
             Console.WriteLine($"Correct Password: {correctPassword}\n");
-            
+
             // Test passwords with varying degrees of correctness
             string[] testPasswords = new string[]
             {
-                "IgnoreMeJustSettling",               // Completely wrong
-                "WrongPassword123",               // Completely wrong
+                "IgnoreMeJustSettling",               // Completely wrong                
                 "X",                          // First char wrong
                 "XX",                          // First char wrong
                 "XXX",                          // First char wrong
                 "XXXX",                          // First char wrong
                 "XXXXX",                          // First char wrong
                 "XXXXXX",                          // First char wrong
+                "XXXXXXXXXXXXXX",                          // First char wrong
                 "XXXXXXXXXXXXXXXXXXXX",       // Correct length
                 "XXXXXXXXXXXXXXXXXXXXX",       // Incorrect length
                 "XXXXXXXXXXXXXXXXXXXXXXXXXXX",       // Completely incorrect
@@ -36,7 +36,7 @@ namespace TimingSensitiveDemo
                 "MySecure",                   // First 8 chars correct
                 "MySecurePassword",           // First 16 chars correct
                 "MaSecurePassworn132!",       // somewhat incorrect
-                "MySecurePassworz132!",       // somewhat incorrect
+                "MySecurePazsworz132!",       // somewhat incorrect
                 "MySecurePassword132!",       // somewhat incorrect
                 "MySecurePassword123!",       // Completely correct
                 "WrongPassword"               // Completely wrong
@@ -44,14 +44,14 @@ namespace TimingSensitiveDemo
 
             Console.WriteLine("--- INSECURE: Character-by-character comparison ---");
             Console.WriteLine("(Notice timing differences based on how many characters match)\n");
-            
+
             foreach (var password in testPasswords)
             {
                 long elapsedTicks = MeasureInsecureComparison(correctPassword, password);
                 Console.WriteLine($"Password: {password,-35} Time: {elapsedTicks,8} ticks");
             }
             Console.WriteLine("\n");
-            
+
             Console.WriteLine("Built In methods:\n");
             foreach (var password in testPasswords)
             {
@@ -59,7 +59,7 @@ namespace TimingSensitiveDemo
                 Console.WriteLine($"Password: {password,-35} Time: {elapsedTicks,8} ticks");
             }
 
-            Console.WriteLine("\n--- SECURE: Constant-time comparison ---");
+            Console.WriteLine("\n--- SECURE? Constant-time comparison ---");
             Console.WriteLine("(Notice consistent timing regardless of match quality)\n");
 
             foreach (var password in testPasswords)
@@ -67,6 +67,15 @@ namespace TimingSensitiveDemo
                 long elapsedTicks = MeasureSecureComparison(correctPassword, password);
                 Console.WriteLine($"Password: {password,-35} Time: {elapsedTicks,8} ticks");
             }
+
+            Console.WriteLine("\n--- SECURE: Manual-Fixed-time comparison ---");
+            foreach (var password in testPasswords)
+            {
+                long elapsedTicks = MeasureSecureComparisonManual(correctPassword, password);
+                Console.WriteLine($"Password: {password,-35} Time: {elapsedTicks,8} ticks");
+            }
+
+            Console.WriteLine("\n--- SECURE: Delay-time comparison ---");
 
             Console.WriteLine("\n--- SECURE: Delay-time comparison ---");
             foreach (var password in testPasswords)
@@ -86,8 +95,8 @@ namespace TimingSensitiveDemo
             Console.ReadKey();
         }
 
-       
-        
+
+
 
         /// <summary>
         /// Measures the execution time of insecure password comparison.
@@ -95,27 +104,27 @@ namespace TimingSensitiveDemo
         static long MeasureInsecureComparison(string correct, string test)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            
+
             // Run multiple iterations to get measurable timing
             for (int i = 0; i < 10000; i++)
             {
                 PasswordComparer.InsecurePasswordCompare(correct, test);
             }
-            
+
             sw.Stop();
             return sw.ElapsedTicks;
         }
 
-         static long MeasureInsecureComparison2(string correct, string test)
+        static long MeasureInsecureComparison2(string correct, string test)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            
+
             // Run multiple iterations to get measurable timing
             for (int i = 0; i < 10000; i++)
             {
                 PasswordComparer.InsecurePasswordCompare(correct, test);
             }
-            
+
             sw.Stop();
             return sw.ElapsedTicks;
         }
@@ -126,13 +135,30 @@ namespace TimingSensitiveDemo
         static long MeasureSecureComparison(string correct, string test)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            
+
             // Run multiple iterations to get measurable timing
             for (int i = 0; i < 10000; i++)
             {
                 PasswordComparer.SecurePasswordCompare(correct, test);
             }
-            
+
+            sw.Stop();
+            return sw.ElapsedTicks;
+        }
+
+        /// <summary>
+        /// Measures the execution time of secure password comparison.
+        /// </summary>
+        static long MeasureSecureComparisonManual(string correct, string test)
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+
+            // Run multiple iterations to get measurable timing
+            for (int i = 0; i < 10000; i++)
+            {
+                PasswordComparer.SecurePasswordCompareManual(correct, test);
+            }
+
             sw.Stop();
             return sw.ElapsedTicks;
         }
@@ -143,16 +169,18 @@ namespace TimingSensitiveDemo
         static async Task<long> MeasureSecureComparisonDelay(string correct, string test)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            
+
             // Run multiple iterations to get measurable timing
             for (int i = 0; i < 10000; i++)
             {
                 PasswordComparer.SecurePasswordCompare(correct, test);
-                await PasswordComparer.DelayMicroseconds(10); // Add fixed delay to mitigate timing attacks
+                await PasswordComparer.DelayMicroseconds(5); // Add fixed delay to mitigate timing attacks
             }
-            
+
             sw.Stop();
             return sw.ElapsedTicks;
         }
+
+       
     }
 }

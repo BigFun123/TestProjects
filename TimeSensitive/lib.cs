@@ -11,40 +11,7 @@ namespace TimingSensitiveDemo
     {
 
         static Random random = new Random(1234);
-        /// <summary>
-        /// Alternative secure implementation if CryptographicOperations is not available.
-        /// </summary>
-        public static bool SecurePasswordCompareManual(string password1, string password2)
-        {
-            byte[] bytes1 = Encoding.UTF8.GetBytes(password1);
-            byte[] bytes2 = Encoding.UTF8.GetBytes(password2);
 
-            // Always compare all bytes, even if lengths differ
-            int length = Math.Max(bytes1.Length, bytes2.Length);
-            int diff = bytes1.Length ^ bytes2.Length;
-
-            for (int i = 0; i < length; i++)
-            {
-                int b1 = i < bytes1.Length ? bytes1[i] : 0;
-                int b2 = i < bytes2.Length ? bytes2[i] : 0;
-                diff |= b1 ^ b2;
-            }
-
-            return diff == 0;
-        }
-
-        /// <summary>
-        /// SECURE: Uses constant-time comparison to prevent timing attacks.
-        /// </summary>
-        public static bool SecurePasswordCompare(string password1, string password2)
-        {
-            byte[] bytes1 = Encoding.UTF8.GetBytes(password1);
-            byte[] bytes2 = Encoding.UTF8.GetBytes(password2);
-
-            // Use CryptographicOperations.FixedTimeEquals for constant-time comparison
-            // Available in .NET Core 2.1+ and .NET Standard 2.1+
-            return CryptographicOperations.FixedTimeEquals(bytes1, bytes2);
-        }
 
         /// <summary>
         /// INSECURE: Compares passwords character-by-character and returns early on mismatch.
@@ -97,10 +64,49 @@ namespace TimingSensitiveDemo
             return true;
         }
 
+        /// <summary>
+        /// Alternative secure implementation if CryptographicOperations is not available.
+        /// </summary>
+        public static bool SecurePasswordCompareManual(string password1, string password2)
+        {
+            byte[] bytes1 = Encoding.UTF8.GetBytes(password1);
+            byte[] bytes2 = Encoding.UTF8.GetBytes(password2);
+
+            // Constant-time comparison using bitwise operations
+            int diff = bytes1.Length ^ bytes2.Length;
+            int length = Math.Max(bytes1.Length, bytes2.Length);            
+
+            for (int i = 0; i < length; i++)
+            {
+                int b2 = i < bytes2.Length ? bytes2[i] : 0;
+                int b1 = i < bytes1.Length ? bytes1[i] : 0;                
+                diff |= b1 ^ b2;
+            }
+
+            return diff == 0;
+        }
+
+        /// <summary>
+        /// SECURE: Uses constant-time comparison to prevent timing attacks.
+        /// </summary>
+        public static bool SecurePasswordCompare(string password1, string password2)
+        {
+            byte[] bytes1 = Encoding.UTF8.GetBytes(password1);
+            byte[] bytes2 = Encoding.UTF8.GetBytes(password2);
+
+            // Use CryptographicOperations.FixedTimeEquals for constant-time comparison
+            // Available in .NET Core 2.1+ and .NET Standard 2.1+
+            return CryptographicOperations.FixedTimeEquals(bytes1, bytes2);
+        }
+
+        /// <summary>
+        /// Introduces a precise delay in microseconds to mitigate timing attacks.
+        /// Adds a small amount of random jitter to prevent optimization.
+        /// </summary>
         public static async Task DelayMicroseconds(double microseconds)
         {
-            
-            microseconds += random.NextDouble() * 10; // Add small random jitter to prevent optimization
+
+            microseconds += random.NextDouble() * 40; // Add small random jitter to prevent optimization            
             Stopwatch stopwatch = Stopwatch.StartNew();
             double targetTicks = microseconds * TimeSpan.TicksPerMillisecond / 1000.0;
 
