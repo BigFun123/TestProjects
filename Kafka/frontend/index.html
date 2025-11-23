@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafka Frontend</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        input, textarea, button { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Send Message to Kafka</h1>
+    
+    <label>Topic:</label>
+    <input type="text" id="topic" value="test-topic" placeholder="Enter topic name">
+    
+    <label>Message:</label>
+    <textarea id="message" rows="4" placeholder='{"key": "value"}'></textarea>
+    
+    <button onclick="sendMessage()">Send to Kafka</button>
+    
+    <div id="status"></div>
+    
+    <script src="./main.js"></script>
+</body>
+</html>
