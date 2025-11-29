@@ -1,0 +1,58 @@
+# OpenTelemetry Collector Configuration for Kubernetes
+# This config is optimized for AWS EKS with CloudWatch and X-Ray
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+  
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 1024
+  
+  # Add resource attributes for Kubernetes
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: production
+        action: insert
+
+exporters:
+  # AWS X-Ray for distributed tracing
+  awsxray:
+    region: us-east-1
+    # Uses IRSA (IAM Roles for Service Accounts) for authentication
+  
+  # AWS CloudWatch for metrics and logs
+  awsemf:
+    region: us-east-1
+    namespace: OpenTelemetry/App
+  
+  # Logging for debugging
+  logging:
+    loglevel: info
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [awsxray, logging]
+    
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [awsemf, logging]
+    
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [awsemf, logging]

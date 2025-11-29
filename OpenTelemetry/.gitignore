@@ -1,0 +1,38 @@
+# .NET Build artifacts
+bin/
+obj/
+*.user
+*.suo
+
+# Docker
+.dockerignore
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+dont_store.env
+
+# AWS Configuration (contains sensitive information)
+aws-config.cmd
+trust-policy.json
+dont_store.env
+
+# Kubernetes Configuration (contains account IDs and regions)
+kubernetes/helm-values.yaml
+kubernetes/sample-app-deployment.yaml
+kubernetes/otel-collector-deployment.yaml
+
+# Personal cluster configuration
+cluster-config.yml

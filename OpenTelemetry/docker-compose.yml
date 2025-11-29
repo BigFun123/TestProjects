@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Jaeger - for trace visualization
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317"         # OTLP gRPC receiver
+      - "4318"         # OTLP HTTP receiver
+    networks:
+      - otel-network
+
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"    # OTLP gRPC receiver
+      - "4318:4318"    # OTLP HTTP receiver
+      - "8888:8888"    # Prometheus metrics
+      - "13133:13133"  # Health check
+    depends_on:
+      - jaeger
+    networks:
+      - otel-network
+
+  # .NET Sample Application
+  dotnet-app:
+    build:
+      context: ./dotnet-sample/OtelSampleApp
+      dockerfile: Dockerfile
+    container_name: dotnet-sample-app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=otel-sample-app
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=local
+    ports:
+      - "5000:8080"
+    depends_on:
+      - otel-collector
+    networks:
+      - otel-network
+
+networks:
+  otel-network:
+    driver: bridge

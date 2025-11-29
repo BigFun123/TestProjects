@@ -1,0 +1,241 @@
+===============================================
+AWS EKS OPENTELEMETRY SETUP - COST ESTIMATE
+===============================================
+Region: us-east-1
+Date: November 2025
+
+COMPUTE COSTS (EKS Auto Mode)
+------------------------------
+1. EKS Cluster Management Fee
+   - $0.10/hour per cluster
+   - Monthly: $73/month
+   
+2. EC2 Compute Nodes (c6a.large)
+   - Instance Type: c6a.large (2 vCPU, 4 GB RAM)
+   - Current: 1 node running
+   - On-Demand Price: ~$0.0765/hour
+   - Monthly (1 node): ~$56/month
+   
+   Note: EKS Auto Mode scales automatically
+   - Typical for this setup: 1-2 nodes
+   - Estimated range: $56-112/month
+
+3. EKS Pod Compute (Auto Mode charges)
+   - Additional ~$0.01/hour per pod for management
+   - 6 pods total (2 collector + 2 app + 2 kube-system)
+   - Estimated: ~$4-5/month
+
+TOTAL COMPUTE: ~$133-150/month
+
+NETWORKING COSTS
+------------------------------
+1. Network Load Balancer (NLB)
+   - NLB hourly charge: $0.0225/hour
+   - Monthly: ~$16.50/month
+   - LCU (Load Balancer Capacity Units): ~$0.008/hour per LCU
+   - Estimated LCUs (low traffic): 1-2 LCUs
+   - Monthly: ~$6-12/month for data processing
+
+2. Data Transfer
+   - Within same AZ: FREE
+   - Between AZs: $0.01/GB
+   - Internet egress: $0.09/GB (first 10TB)
+   - Estimated (low traffic): $5-10/month
+
+TOTAL NETWORKING: ~$28-40/month
+
+STORAGE COSTS
+------------------------------
+1. Amazon ECR (Elastic Container Registry)
+   - Storage: $0.10/GB per month
+   - 1 container image (~200MB): ~$0.02/month
+   - Data transfer OUT: First 1 GB free, then $0.09/GB
+   - Estimated: $0.50-1/month
+
+2. EBS Volumes (for pods)
+   - gp3: $0.08/GB per month
+   - Estimated 30GB total: ~$2.40/month
+
+TOTAL STORAGE: ~$3/month
+
+OBSERVABILITY COSTS (CRITICAL)
+------------------------------
+1. AWS X-Ray
+   - First 100,000 traces recorded: FREE
+   - Additional traces: $5.00 per 1 million traces recorded
+   - First 1 million traces retrieved/scanned: FREE
+   - Additional: $0.50 per 1 million traces retrieved
+   
+   Low traffic estimate: FREE - $5/month
+   Medium traffic (100K req/day): $10-20/month
+
+2. Amazon CloudWatch
+   a) Logs:
+      - First 5 GB: $0.50/GB ingested
+      - Storage: $0.03/GB per month
+      - Estimated (collector + app logs): $5-15/month
+   
+   b) Metrics:
+      - First 10,000 custom metrics: $0.30 per metric/month
+      - Standard resolution: $0.01 per 1,000 metrics
+      - OpenTelemetry metrics (10-20 custom): $3-6/month
+   
+   c) Dashboard (if created):
+      - $3 per dashboard per month
+   
+   TOTAL CloudWatch: $10-25/month
+
+TOTAL OBSERVABILITY: $10-50/month
+(Can be $100-200/month with high traffic)
+
+===============================================
+MONTHLY TOTAL ESTIMATE
+===============================================
+
+MINIMAL USAGE (Development/Testing):
+- Compute: $133
+- Networking: $28
+- Storage: $3
+- Observability: $10
+------------------------------
+TOTAL: ~$175/month
+
+MODERATE USAGE (Low Production):
+- Compute: $140
+- Networking: $35
+- Storage: $3
+- Observability: $30
+------------------------------
+TOTAL: ~$210/month
+
+HIGH USAGE (Production with Traffic):
+- Compute: $150
+- Networking: $40
+- Storage: $3
+- Observability: $100-200
+------------------------------
+TOTAL: ~$290-390/month
+
+===============================================
+COST OPTIMIZATION TIPS
+===============================================
+
+1. COMPUTE SAVINGS:
+   ✓ Use Spot Instances for non-prod (60-90% savings)
+   ✓ Enable cluster autoscaling to scale to zero off-hours
+   ✓ Use Fargate Spot for burst workloads
+   ✓ Reserved Instances for steady-state (40-60% savings)
+
+2. OBSERVABILITY SAVINGS:
+   ✓ Enable trace sampling (sample 10-20% in production)
+     - Can reduce X-Ray costs by 80-90%
+   ✓ Set CloudWatch Logs retention to 7-14 days
+   ✓ Filter logs - only send ERROR/WARN to CloudWatch
+   ✓ Use CloudWatch Logs Insights instead of storing all logs
+   ✓ Aggregate metrics before sending to reduce custom metrics
+
+3. NETWORKING SAVINGS:
+   ✓ Keep traffic within same AZ when possible
+   ✓ Use VPC endpoints for AWS services ($0.01/GB vs $0.09/GB)
+   ✓ Use CloudFront if serving public traffic globally
+
+4. STORAGE SAVINGS:
+   ✓ Enable ECR lifecycle policies to delete old images
+   ✓ Use gp3 instead of gp2 (20% cheaper)
+   ✓ Clean up unused EBS snapshots
+
+===============================================
+FREE TIER BENEFITS (First 12 Months)
+===============================================
+
+If this is a new AWS account:
+- EKS: No free tier
+- EC2: 750 hours/month of t2.micro/t3.micro FREE
+  (Does NOT apply to c6a.large)
+- CloudWatch: 10 custom metrics FREE
+- CloudWatch Logs: 5GB ingestion FREE
+- X-Ray: 100,000 traces FREE (always)
+- ECR: 500MB storage FREE
+
+Estimated savings with Free Tier: $10-15/month
+
+===============================================
+RECOMMENDED CONFIGURATION FOR DEV
+===============================================
+
+To reduce costs for development:
+
+1. Change to smaller instance types:
+   - Use t3.medium instead of c6a.large
+   - Savings: ~$35/month
+
+2. Scale down during off-hours:
+   - Delete pods 6pm-8am (14 hours)
+   - Savings: ~$40-50/month
+
+3. Enable aggressive trace sampling:
+   - Sample 5-10% of traces
+   - Savings: ~$50-100/month (high traffic)
+
+4. Use local development primarily:
+   - Docker Compose (FREE)
+   - Deploy to EKS only for integration testing
+
+OPTIMIZED DEV COST: ~$100-120/month
+
+===============================================
+COST MONITORING COMMANDS
+===============================================
+
+Check current AWS costs:
+aws ce get-cost-and-usage --time-period Start=2025-11-01,End=2025-11-30 --granularity MONTHLY --metrics BlendedCost --group-by Type=SERVICE
+
+Enable Cost Allocation Tags:
+aws ce update-cost-allocation-tags-status --cost-allocation-tags-status TagKey=kubernetes.io/cluster/YOUR_CLUSTER_NAME,Status=Active
+
+Set up billing alerts:
+aws cloudwatch put-metric-alarm --alarm-name eks-monthly-cost --comparison-operator GreaterThanThreshold --threshold 200 --metric-name EstimatedCharges --namespace AWS/Billing
+
+===============================================
+ALTERNATIVE: SERVERLESS APPROACH
+===============================================
+
+For significant cost reduction, consider:
+
+1. AWS App Runner + X-Ray
+   - ~$30-50/month (auto-scales to zero)
+   - No cluster management fees
+   - Built-in load balancing
+
+2. AWS Lambda + API Gateway + X-Ray
+   - ~$10-30/month (very low traffic)
+   - Pay per request only
+   - Automatic scaling
+
+3. AWS Fargate (serverless containers)
+   - ~$80-120/month
+   - No cluster management
+   - Still get full Kubernetes compatibility
+
+===============================================
+CONCLUSION
+===============================================
+
+Current Setup: ~$175-210/month (minimal usage)
+
+This is typical for a small EKS cluster with observability.
+Most production workloads range $300-1000/month depending on:
+- Traffic volume
+- Number of services
+- Trace sampling rate
+- Log retention policies
+
+For cost-effective development:
+- Use Docker Compose locally (FREE)
+- Deploy to EKS only when needed
+- Enable aggressive sampling and short retention
+
+For production:
+- Budget $300-500/month minimum
+- Set up cost alerts
+- Monitor and optimize monthly

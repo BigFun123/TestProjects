@@ -1,0 +1,117 @@
+# Helm values for OpenTelemetry Collector on AWS EKS
+# Copy this file to helm-values.yaml and fill in your values
+# The helm-values.yaml file will be ignored by git
+
+mode: deployment
+
+replicaCount: 2
+
+image:
+  repository: otel/opentelemetry-collector-contrib
+  tag: "0.91.0"
+
+serviceAccount:
+  create: true
+  annotations:
+    # Replace with your IAM role ARN for IRSA
+    eks.amazonaws.com/role-arn: "arn:aws:iam::YOUR_ACCOUNT_ID:role/otel-collector-role"
+  name: otel-collector-sa
+
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+  
+  processors:
+    batch:
+      timeout: 10s
+      send_batch_size: 1024
+    
+    memory_limiter:
+      check_interval: 1s
+      limit_mib: 1024
+    
+    resource:
+      attributes:
+        - key: deployment.environment
+          value: production
+          action: insert
+        - key: service.namespace
+          value: default
+          action: insert
+  
+  exporters:
+    awsxray:
+      region: YOUR_REGION
+    
+    awsemf:
+      region: YOUR_REGION
+      namespace: OpenTelemetry/App
+    
+    logging:
+      loglevel: info
+  
+  service:
+    pipelines:
+      traces:
+        receivers: [otlp]
+        processors: [memory_limiter, batch, resource]
+        exporters: [awsxray, logging]
+      
+      metrics:
+        receivers: [otlp]
+        processors: [memory_limiter, batch, resource]
+        exporters: [awsemf, logging]
+
+service:
+  type: ClusterIP
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 512Mi
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8888"
+  prometheus.io/path: "/metrics"
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - opentelemetry-collector
+        topologyKey: kubernetes.io/hostname
