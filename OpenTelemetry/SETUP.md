@@ -18,7 +18,7 @@ Edit `aws-config.cmd` and fill in your values:
 - `AWS_REGION` - Your AWS region (e.g., us-east-1)
 - `EKS_CLUSTER_NAME` - Your desired EKS cluster name
 - `EKS_OIDC_ID` - Your EKS OIDC provider ID (obtained during cluster creation)
-- `HELM_PATH` - Path to your Helm executable (or just use "helm" if it's in PATH)
+- `HELM_PATH` - D:\setup\dev\helm\windows-amd64\helm.exe
 
 ### 2. Create Kubernetes Configuration Files
 

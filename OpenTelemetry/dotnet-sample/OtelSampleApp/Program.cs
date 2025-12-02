@@ -3,14 +3,22 @@ using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Create ActivitySource for custom spans
 var activitySource = new ActivitySource("OtelSampleApp");
 
-// Get OpenTelemetry endpoint from environment or use default
+// Create custom metrics
+var meter = new Meter("OtelSampleApp", "1.0.0");
+var requestCounter = meter.CreateCounter<long>("app.requests.total", "requests", "Total number of requests");
+var processingTimeHistogram = meter.CreateHistogram<double>("app.request.duration", "ms", "Request processing time");
+var activeRequestsGauge = meter.CreateUpDownCounter<int>("app.requests.active", "requests", "Number of active requests");
+
+// Get OpenTelemetry endpoint from environment, configuration, or use default
 var otlpEndpoint = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT") 
+    ?? builder.Configuration["OpenTelemetry:OtlpEndpoint"]
     ?? "http://localhost:4317";
 
 // Register HttpClient BEFORE building
@@ -36,6 +44,7 @@ builder.Services.AddOpenTelemetry()
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
         .AddRuntimeInstrumentation()
+        .AddMeter("OtelSampleApp")
         .AddConsoleExporter()
         .AddOtlpExporter(options =>
         {
@@ -57,15 +66,33 @@ var app = builder.Build();
 // Sample endpoints for testing
 app.MapGet("/", () => 
 {
+    var stopwatch = Stopwatch.StartNew();
+    activeRequestsGauge.Add(1);
+    
     app.Logger.LogInformation("Root endpoint called");
-    return Results.Ok(new { message = "Hello from OpenTelemetry Sample!", timestamp = DateTime.UtcNow });
+    requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/"));
+    
+    var result = Results.Ok(new { message = "Hello from OpenTelemetry Sample!", timestamp = DateTime.UtcNow });
+    
+    stopwatch.Stop();
+    processingTimeHistogram.Record(stopwatch.ElapsedMilliseconds, new KeyValuePair<string, object?>("endpoint", "/"));
+    activeRequestsGauge.Add(-1);
+    
+    return result;
 });
 
 app.MapGet("/api/users/{id}", async (int id, ILogger<Program> logger, HttpClient httpClient) =>
 {
+    var stopwatch = Stopwatch.StartNew();
+    activeRequestsGauge.Add(1);
+    
     using var activity = activitySource.StartActivity("ProcessUserRequest", ActivityKind.Internal);
     activity?.SetTag("user.id", id);
     activity?.SetTag("request.type", "user_lookup");
+    
+    requestCounter.Add(1, 
+        new KeyValuePair<string, object?>("endpoint", "/api/users"),
+        new KeyValuePair<string, object?>("user_id", id));
     
     logger.LogInformation("Fetching user with ID: {UserId}", id);
     
@@ -111,6 +138,12 @@ app.MapGet("/api/users/{id}", async (int id, ILogger<Program> logger, HttpClient
         activity?.SetTag("result", "success");
         activity?.AddEvent(new ActivityEvent("Request completed successfully"));
         
+        stopwatch.Stop();
+        processingTimeHistogram.Record(stopwatch.ElapsedMilliseconds, 
+            new KeyValuePair<string, object?>("endpoint", "/api/users"),
+            new KeyValuePair<string, object?>("status", "success"));
+        activeRequestsGauge.Add(-1);
+        
         return Results.Ok(new { userId = id, external = content, timestamp = DateTime.UtcNow });
     }
     catch (Exception ex)
@@ -118,15 +151,26 @@ app.MapGet("/api/users/{id}", async (int id, ILogger<Program> logger, HttpClient
         activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
         activity?.RecordException(ex);
         logger.LogError(ex, "Error fetching user {UserId}", id);
+        
+        stopwatch.Stop();
+        processingTimeHistogram.Record(stopwatch.ElapsedMilliseconds, 
+            new KeyValuePair<string, object?>("endpoint", "/api/users"),
+            new KeyValuePair<string, object?>("status", "error"));
+        activeRequestsGauge.Add(-1);
+        
         return Results.Problem("Failed to fetch user data");
     }
 });
 
 app.MapGet("/api/slow", async (ILogger<Program> logger) =>
 {
+    var stopwatch = Stopwatch.StartNew();
+    activeRequestsGauge.Add(1);
+    
     using var activity = activitySource.StartActivity("SlowOperation", ActivityKind.Internal);
     activity?.SetTag("operation.type", "slow_processing");
     
+    requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/api/slow"));
     logger.LogInformation("Slow endpoint called");
     
     // Simulate multiple processing steps
@@ -156,6 +200,10 @@ app.MapGet("/api/slow", async (ILogger<Program> logger) =>
     
     activity?.AddEvent(new ActivityEvent("All processing steps completed"));
     activity?.SetTag("total.steps", 3);
+    
+    stopwatch.Stop();
+    processingTimeHistogram.Record(stopwatch.ElapsedMilliseconds, new KeyValuePair<string, object?>("endpoint", "/api/slow"));
+    activeRequestsGauge.Add(-1);
     
     logger.LogInformation("Slow endpoint completed");
     return Results.Ok(new { message = "Slow operation completed", durationMs = activity?.Duration.TotalMilliseconds });
