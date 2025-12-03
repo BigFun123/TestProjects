@@ -9,10 +9,28 @@ builder.Services.AddControllers();
 
 // Register Calculator with interceptors
 var proxyGenerator = new ProxyGenerator();
+
+// Read interceptor settings from configuration
+var enablePerformanceInterceptor = builder.Configuration.GetValue<bool>("Interceptors:EnablePerformanceInterceptor", true);
+var enableLoggingInterceptor = builder.Configuration.GetValue<bool>("Interceptors:EnableLoggingInterceptor", true);
+
+// Build interceptor list based on configuration
+var interceptors = new List<IInterceptor>();
+if (enableLoggingInterceptor)
+{
+    interceptors.Add(new LoggingInterceptor());
+    Console.WriteLine("✓ LoggingInterceptor enabled");
+}
+if (enablePerformanceInterceptor)
+{
+    interceptors.Add(new PerformanceInterceptor());
+    Console.WriteLine("✓ PerformanceInterceptor enabled");
+}
+
+// Create calculator with configured interceptors
 var calculator = proxyGenerator.CreateInterfaceProxyWithTarget<ICalculator>(
     new Calculator(),
-    new LoggingInterceptor(),
-    new PerformanceInterceptor()
+    interceptors.ToArray()
 );
 builder.Services.AddSingleton<ICalculator>(calculator);
 
