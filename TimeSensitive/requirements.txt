@@ -1,3 +1,0 @@
-Create a csharp project that illustrates how a time sensitve password hack could be used to gain unauthorized access to a system. 
-The project should include code that demonstrates the vulnerability, as well as comments explaining how the hack works and how to mitigate such vulnerabilities in real-world applications.
-For example a password check that returns a different time for each character matched can be exploited using a timing attack.
