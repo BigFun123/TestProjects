@@ -1,0 +1,4 @@
+a demo of a bloom filter in SQL. 
+the table and required fireds in BloomTable.sql 
+(it can show simple id, Date, Name, Balance data, and any other fields required for the bloom filter), 
+and a demo sql query in BloomFilter.sql that demonstrates how to get data from the table.

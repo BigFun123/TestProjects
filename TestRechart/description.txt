@@ -1,0 +1,6 @@
+in TestRechart folder
+
+in frontend sub folder, create a react vite app with a recharts chart.
+The chart will get data from a sql command.
+
+in backend sub folder, create a simple c# web app that gets the data from a mssql database
