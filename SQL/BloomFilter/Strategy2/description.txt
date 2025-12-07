@@ -1,0 +1,5 @@
+in BloomFilter/Strategy2
+1. Create a mssql table with 3 columns: id, name (VARCHAR(6$)), bloom (BIGINT UNSIGNED). 
+2. Create a SQL demo of a fast lookup by using  "bloom" column: When a row is added or modified, a simple bitflipping algorithm will flip the bits of the bloom column according to the string content of the name column.
+3. Write another sql file to search the table, performing bitwise operators on the bloom column to quickly search.
+4. Write a testing query to test performance between regular select operation vs searching by the bloom column
