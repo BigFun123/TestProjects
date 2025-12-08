@@ -1,0 +1,5 @@
+create a simple c# app that uses entity framework.
+local database connectionstring is :
+string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=scratch;Integrated Security=true;TrustServerCertificate=true;";
+Use separate files where possible.
+Add code comments.
