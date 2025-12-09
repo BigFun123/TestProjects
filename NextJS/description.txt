@@ -1,0 +1,4 @@
+create a nextjs project that works with react 18. 
+it has a server size component that fetches data from an endpoint.
+it has a recharts graph with 3 buttons "day", "week", "month".
+when the user clicks one of the buttons, the server fetches the data with the "period" parameter set to the button name.
