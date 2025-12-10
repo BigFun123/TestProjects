@@ -1,0 +1,3 @@
+A simple dotnet 8 web app, entity framework project.
+Shows how to handle various queries, e.g. simple, with parameters, with routes, etc.
+Add Code comments.
