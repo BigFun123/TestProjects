@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  ekswebapi:
+    build:
+      context: ../ekswebapi
+      dockerfile: Dockerfile
+    container_name: ekswebapi
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - eks-network
+
+  ekstaskscheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ekstaskscheduler
+    depends_on:
+      - ekswebapi
+    environment:
+      - ApiSettings__BaseUrl=http://ekswebapi:8080
+      - ApiSettings__Endpoint=/api/hello
+    networks:
+      - eks-network
+
+networks:
+  eks-network:
+    driver: bridge

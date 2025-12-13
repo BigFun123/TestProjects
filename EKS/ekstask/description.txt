@@ -1,0 +1,1 @@
+using c# dotnet 8, create an eks task that schedules an api call to "money/api/updatetotals"

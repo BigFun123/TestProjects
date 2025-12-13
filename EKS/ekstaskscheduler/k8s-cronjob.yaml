@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: eks-scheduler
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ekswebapi-service
+  namespace: eks-scheduler
+spec:
+  selector:
+    app: ekswebapi
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ekswebapi
+  namespace: eks-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ekswebapi
+  template:
+    metadata:
+      labels:
+        app: ekswebapi
+    spec:
+      containers:
+      - name: ekswebapi
+        image: <YOUR_ECR_REPO>/ekswebapi:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: api-scheduler-cronjob
+  namespace: eks-scheduler
+spec:
+  # Run every 5 minutes (adjust as needed)
+  # Format: "minute hour day month dayOfWeek"
+  # Examples:
+  # */5 * * * * = every 5 minutes
+  # 0 * * * * = every hour
+  # 0 0 * * * = every day at midnight
+  # 0 */6 * * * = every 6 hours
+  schedule: "*/5 * * * *"
+  
+  # Keep history of last 3 successful and 3 failed jobs
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  
+  # Job template
+  jobTemplate:
+    spec:
+      # Don't retry failed jobs immediately
+      backoffLimit: 2
+      
+      # Job must complete within 5 minutes
+      activeDeadlineSeconds: 300
+      
+      template:
+        metadata:
+          labels:
+            app: api-scheduler
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: scheduler
+            image: <YOUR_ECR_REPO>/ekstaskscheduler:latest
+            env:
+            - name: ApiSettings__BaseUrl
+              value: "http://ekswebapi-service.eks-scheduler.svc.cluster.local"
+            - name: ApiSettings__Endpoint
+              value: "/api/hello"
+            resources:
+              requests:
+                memory: "64Mi"
+                cpu: "50m"
+              limits:
+                memory: "128Mi"
+                cpu: "200m"

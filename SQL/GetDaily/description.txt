@@ -1,0 +1,13 @@
+In a financial app, I want to create a graph showing the total model holdings over time for a specific model.
+However, a query must be run daily to get today's model values.
+
+create the sql queries where: 
+on server "money":
+The database has the following tables:
+A model table that references a model group. columns: modelid, modelgroupid.
+A model group table. columns: modelgroupid, portfolioid, portfolioweight. There may be multiple portfolios in a model, with weights adding up to 1.
+A portfolio table: columns: portfolioid, instrumentid.
+
+In another server "ios" the portfiolios and instruments are defined:
+portfolio: columns: portfolioid, instrumentid
+instrument: instrumentid, instrumentvalue, date

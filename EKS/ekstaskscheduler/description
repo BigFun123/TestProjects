@@ -1,0 +1,3 @@
+create the files needed to schedule a cron job on eks, 
+as well as test locally on docker.
+the job will call the api endpoing in /EKS/ekswebapi, a c# webapi project with a single "hello world" endpoint
