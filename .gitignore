@@ -2,3 +2,6 @@
 /Docker/HelloEKS/.env
 /Tailwind/workspace/.next/cache/eslint/.cache_1vaj8nx
 *.pack.gz
+AWS/certs/hello.pem
+AWS/.env
+/AWS/k8s/k3s.yml
