@@ -1,2 +1,0 @@
-A simple nexxtjs react with tailwind app.
-Demonstrate how to use themes. e.g. use a color from a theme in a button.
