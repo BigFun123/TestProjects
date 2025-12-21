@@ -1,0 +1,4 @@
+*.*.js
+/Docker/HelloEKS/.env
+/Tailwind/workspace/.next/cache/eslint/.cache_1vaj8nx
+*.pack.gz

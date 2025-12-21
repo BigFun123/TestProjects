@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  hellocompose:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hellocompose:latest
+    container_name: hellocompose-app
+    restart: unless-stopped
+    environment:
+      - DOTNET_ENVIRONMENT=Production
+    # Uncomment below to add volumes for logs or data persistence
+    # volumes:
+    #   - ./logs:/app/logs

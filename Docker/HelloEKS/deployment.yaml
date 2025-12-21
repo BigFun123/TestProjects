@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-eks
+  labels:
+    app: hello-eks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-eks
+  template:
+    metadata:
+      labels:
+        app: hello-eks
+    spec:
+      containers:
+      - name: hello-eks
+        image: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/hello-eks:latest
+        env:
+        - name: TARGET_URL
+          value: "https://httpbin.org/get"
+        - name: INTERVAL_SECONDS
+          value: "30"
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"

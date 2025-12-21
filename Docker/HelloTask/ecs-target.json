@@ -1,0 +1,20 @@
+[
+  {
+    "Id": "1",
+    "Arn": "arn:aws:ecs:<AWS_REGION>:<AWS_ACCOUNT_ID>:cluster/<CLUSTER_NAME>",
+    "RoleArn": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/ecsEventsRole",
+    "EcsParameters": {
+      "TaskDefinitionArn": "arn:aws:ecs:<AWS_REGION>:<AWS_ACCOUNT_ID>:task-definition/<TASK_DEFINITION>",
+      "TaskCount": 1,
+      "LaunchType": "FARGATE",
+      "NetworkConfiguration": {
+        "awsvpcConfiguration": {
+          "Subnets": ["<SUBNET_1>", "<SUBNET_2>"],
+          "SecurityGroups": ["<SECURITY_GROUP>"],
+          "AssignPublicIp": "ENABLED"
+        }
+      },
+      "PlatformVersion": "LATEST"
+    }
+  }
+]
