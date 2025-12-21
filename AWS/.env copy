@@ -1,0 +1,23 @@
+AWS_ACCESS_KEY=
+ip=13.57.56.10
+
+set perms on certs\hello.pem to disable inheritance, only
+allow this user
+
+ notepad %USERPROFILE%\.kube\config
+
+aws sts get-caller-identity
+
+kubectl get nodes
+
+      ssh -i certs\hello.pem ubuntu@13.57.56.10
+
+aws ec2 describe-instances --region us-west-1 --filters "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].[InstanceId,PublicIpAddress,State.Name,SecurityGroups[*].GroupId]" --output table
+
+aws ec2 start-instances --instance-ids i-XXXXXXXXX --region us-east-1
+
+add ip to your security group 
+aws ec2 authorize-security-group-ingress --region us-west-1 --group-id sg-06f271e8e5c46c23f --protocol tcp --port 22 --cidr YOUR_IP/32
+
+add pot 6443 for kube ctl
+aws ec2 authorize-security-group-ingress --region us-west-1 --group-id sg-06f271e8e5c46c23f --protocol tcp --port 6443 --cidr YOUR_IP/32
