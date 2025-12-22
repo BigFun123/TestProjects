@@ -1,0 +1,1 @@
+docker run 984778981719.dkr.ecr.eu-west-1.amazonaws.com/hellocron:latest

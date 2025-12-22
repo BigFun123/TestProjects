@@ -1,0 +1,7 @@
+create a simple c# dotnet 8 hello world app in ./HelloCron that sends an http request.
+
+The app is triggered by an aws cron task.
+
+create step by step numbered .cmd files for aws instructions, with a brief explanation for each. 
+
+This is a learning resource.
