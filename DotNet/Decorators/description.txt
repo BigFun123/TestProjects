@@ -1,0 +1,10 @@
+create a dotnet web app that implements a custom decorator [CustomAuth] 
+for a custom authorization on an endpoint
+
+example:
+
+[CustomAuth]
+[HttGet]
+void MyApiEndpoint() {
+    //do something
+}
