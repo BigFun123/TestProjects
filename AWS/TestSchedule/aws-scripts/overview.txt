@@ -1,0 +1,69 @@
+## Overview of AWS Scheduling Setup for Docker App
+
+This document summarizes the process and discoveries for deploying a Dockerized C# Web API to AWS ECS and scheduling it to run every 24 hours using EventBridge.
+
+### Initial Setup
+- **Scripts Created**:
+  - `1-deploy.sh`: Builds Docker image, pushes to ECR, creates ECS cluster, registers task definition.
+  - `2-schedule.sh`: Creates EventBridge rule with schedule expression "rate(24 hours)" and targets the ECS task.
+
+- **Prerequisites**:
+  - AWS CLI configured with appropriate credentials.
+  - Docker installed locally.
+  - .NET SDK for building the C# app.
+
+### Key Discoveries and Issues Resolved
+
+#### 1. Obtaining VPC and Subnet IDs
+- **Problem**: Scripts require VPC and subnet IDs for ECS network configuration.
+- **Solution**:
+  - Use AWS CLI to list VPCs: `aws ec2 describe-vpcs --query 'Vpcs[*].{ID:VpcId, Name:Tags[?Key==`Name`].Value|[0], CIDR:CidrBlock}' --output table`
+  - List subnets for a VPC: `aws ec2 describe-subnets --filters "Name=vpc-id,Values=<vpc-id>" --query 'Subnets[*].SubnetId' --output text`
+  - Alternatively, use AWS Console: VPC > Your VPCs/Subnets.
+
+#### 2. IAM Permissions for EventBridge
+- **Problem**: AccessDeniedException for `events:PutRule` and `events:PutTargets`.
+- **Root Cause**: IAM user lacked permissions for EventBridge actions.
+- **Solution**:
+  - Attach managed policies: `AmazonEventBridgeFullAccess`, `AmazonECS_FullAccess`, `AmazonEC2ContainerRegistryFullAccess`, `AmazonEC2FullAccess`.
+  - Or create a custom policy with actions like:
+    - `events:PutRule`, `events:PutTargets`
+    - `ecs:CreateCluster`, `ecs:RegisterTaskDefinition`
+    - `ecr:CreateRepository`, `ecr:GetAuthorizationToken`, `ecr:PutImage`
+    - `ec2:DescribeVpcs`, `ec2:DescribeSubnets`
+    - `iam:PassRole` (critical for role assumption)
+
+#### 3. IAM Role for EventBridge (ecsEventsRole)
+- **Problem**: `iam:PassRole` error because `ecsEventsRole` did not exist.
+- **Root Cause**: EventBridge needs a role to assume when triggering ECS tasks.
+- **Solution**:
+  - Create IAM role named `ecsEventsRole`.
+  - Trusted entity: `events.amazonaws.com`.
+  - Attach policy: `AmazonECSTaskExecutionRolePolicy`.
+  - Trust policy:
+     ```json
+     {
+         "Version": "2012-10-17",
+         "Statement": [
+             {
+                 "Effect": "Allow",
+                 "Principal": {
+                     "Service": "events.amazonaws.com"
+                 },
+                 "Action": "sts:AssumeRole"
+             }
+         ]
+     }
+     ```
+  - Create via Console or CLI: `aws iam create-role --role-name ecsEventsRole --assume-role-policy-document '{...}'`
+
+### Execution Order
+1. Run `1-deploy.sh` to set up ECR, ECS cluster, and task definition.
+2. Ensure `ecsEventsRole` exists.
+3. Run `2-schedule.sh` to create the EventBridge rule and target.
+
+### Notes
+- All resources are in `us-east-1` region.
+- The schedule runs the ECS task every 24 hours using Fargate.
+- Monitor via AWS Console: ECS > Clusters, EventBridge > Rules.
+- Costs: Fargate tasks incur charges per vCPU/second and GB/second.

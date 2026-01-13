@@ -1,0 +1,1 @@
+aws ec2 describe-subnets --query 'Subnets[*].{ID:SubnetId, VPC:VpcId, AZ:AvailabilityZone, CIDR:CidrBlock}' --output table

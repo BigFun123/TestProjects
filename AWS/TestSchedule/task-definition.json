@@ -1,0 +1,18 @@
+{
+    "family": "hello-task",
+    "taskRoleArn": "",
+    "executionRoleArn": "arn:aws:iam::984778981719:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512",
+    "containerDefinitions": [
+        {
+            "name": "hello-container",
+            "image": "984778981719.dkr.ecr.us-east-1.amazonaws.com/hello-app:latest",
+            "essential": true
+        }
+    ]
+}
