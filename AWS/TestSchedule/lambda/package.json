@@ -1,0 +1,17 @@
+{
+  "name": "lambda-http-request",
+  "version": "1.0.0",
+  "description": "AWS Lambda function to make HTTP request to ALB",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.400.0"
+  },
+  "devDependencies": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

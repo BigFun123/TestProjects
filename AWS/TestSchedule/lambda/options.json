@@ -1,0 +1,14 @@
+{
+  "options": {
+    "hostname": "usermetrics.net",
+    "port": 443,
+    "path": "/health",
+    "method": "GET",
+    "headers": {
+      "Content-Type": "application/json",
+      "Content-Length": "0"
+    }
+  },
+  "data": null,
+  "secretName": "secrets"
+}
