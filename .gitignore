@@ -5,3 +5,4 @@
 AWS/certs/hello.pem
 AWS/.env
 /AWS/k8s/k3s.yml
+.terraform
