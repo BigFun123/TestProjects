@@ -29,6 +29,11 @@ resource "aws_lambda_function" "scheduled_lambda" {
   filename      = var.lambda_package
   source_code_hash = filebase64sha256(var.lambda_package)
   timeout       = 30
+  environment {
+    variables = {
+      FETCH_URL = var.scheduled_lambda_fetch_url
+    }
+  }
 }
 
 resource "aws_lambda_function" "node_lambda" {
@@ -38,16 +43,21 @@ resource "aws_lambda_function" "node_lambda" {
   runtime       = "nodejs20.x"
   filename      = var.node_lambda_package
   source_code_hash = filebase64sha256(var.node_lambda_package)
+  environment {
+    variables = {
+      FETCH_URL = var.node_lambda_fetch_url
+    }
+  }
   timeout       = 30
 }
 
-resource "aws_cloudwatch_event_rule" "every_24_hours" {
-  name                = "every-24-hours"
-  schedule_expression = "rate(24 hours)"
+resource "aws_cloudwatch_event_rule" "every_3_hours" {
+  name                = "every-3-hours"
+  schedule_expression = "rate(3 hours)"
 }
 
 resource "aws_cloudwatch_event_target" "lambda_target" {
-  rule      = aws_cloudwatch_event_rule.every_24_hours.name
+  rule      = aws_cloudwatch_event_rule.every_3_hours.name
   target_id = "lambda"
   arn       = aws_lambda_function.scheduled_lambda.arn
 }
@@ -57,5 +67,5 @@ resource "aws_lambda_permission" "allow_eventbridge" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.scheduled_lambda.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.every_24_hours.arn
+  source_arn    = aws_cloudwatch_event_rule.every_3_hours.arn
 }

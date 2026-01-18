@@ -3,5 +3,5 @@ output "lambda_function_name" {
 }
 
 output "eventbridge_rule_arn" {
-  value = aws_cloudwatch_event_rule.every_24_hours.arn
+  value = aws_cloudwatch_event_rule.every_3_hours.arn
 }

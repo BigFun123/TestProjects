@@ -16,9 +16,27 @@ public class Function
     /// <returns></returns>
     /// public void FunctionHandler(CloudWatchEvent<dynamic> evnt, ILambdaContext context)
 
-    public string FunctionHandler(object input, ILambdaContext context)
+    public async Task<string> FunctionHandler(object input, ILambdaContext context)
     {
-        // return the input json, handle possible null
-        return input?.ToString() ?? string.Empty;
+        var url = Environment.GetEnvironmentVariable("FETCH_URL");
+        if (string.IsNullOrEmpty(url))
+        {
+            context.Logger.LogLine("FETCH_URL environment variable is not set.");
+            return "FETCH_URL environment variable is not set.";
+        }
+
+        try
+        {
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+            context.Logger.LogLine($"Fetched from {url}: {content}");
+            return content;
+        }
+        catch (Exception ex)
+        {
+            context.Logger.LogLine($"Error fetching from {url}: {ex.Message}");
+            return $"Error: {ex.Message}";
+        }
     }
 }
