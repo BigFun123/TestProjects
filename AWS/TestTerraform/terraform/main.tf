@@ -14,6 +14,22 @@ resource "aws_iam_role" "lambda_exec" {
       }
     }]
   })
+
+  inline_policy {
+    name = "AllowGetSecretValue"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "secretsmanager:GetSecretValue"
+          ]
+          Resource = "*"
+        }
+      ]
+    })
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_basic" {
@@ -29,6 +45,10 @@ resource "aws_lambda_function" "scheduled_lambda" {
   filename      = var.lambda_package
   source_code_hash = filebase64sha256(var.lambda_package)
   timeout       = 30
+  vpc_config {
+    subnet_ids         = [aws_subnet.private.id]
+    security_group_ids = [aws_security_group.lambda.id]
+  }
   environment {
     variables = {
       FETCH_URL = var.scheduled_lambda_fetch_url
@@ -43,6 +63,10 @@ resource "aws_lambda_function" "node_lambda" {
   runtime       = "nodejs20.x"
   filename      = var.node_lambda_package
   source_code_hash = filebase64sha256(var.node_lambda_package)
+  vpc_config {
+    subnet_ids         = [aws_subnet.private.id]
+    security_group_ids = [aws_security_group.lambda.id]
+  }
   environment {
     variables = {
       FETCH_URL = var.node_lambda_fetch_url

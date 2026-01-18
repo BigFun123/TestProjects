@@ -9,7 +9,7 @@ public class Function
 {
     
     /// <summary>
-    /// A simple function that takes a string and does a ToUpper
+    /// A simple function that takes an object and does a HTTP GET request to a URL specified in environment variable FETCH_URL.
     /// </summary>
     /// <param name="input">The event for the Lambda function handler to process.</param>
     /// <param name="context">The ILambdaContext that provides methods for logging and describing the Lambda environment.</param>
@@ -23,6 +23,16 @@ public class Function
         {
             context.Logger.LogLine("FETCH_URL environment variable is not set.");
             return "FETCH_URL environment variable is not set.";
+        }
+
+        // get APIKey from secrets manager
+        var secretsService = new SecretsManagerService();
+        var apiKeySecret = await secretsService.GetSecretValueAsync("APIKey");
+        if (string.IsNullOrEmpty(apiKeySecret))
+        {
+            context.Logger.LogLine("APIKey secret not found or empty.");
+        } else {
+            context.Logger.LogLine($"Retrieved APIKey secret.{apiKeySecret}");
         }
 
         try
