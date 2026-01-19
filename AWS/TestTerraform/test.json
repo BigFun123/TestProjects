@@ -1,0 +1,33 @@
+{
+    "statusCode": 200,
+    "body": {
+        "message": "Hello from Node.js Lambda!",
+        "json": {
+            "status": "ok",
+            "counter": 5,
+            "headers": {
+                "accept": "*/*",
+                "host": "usermetrics.net",
+                "user-agent": "node",
+                "accept-encoding": "br, gzip, deflate",
+                "accept-language": "*",
+                "max-forwards": "10",
+                "sec-fetch-mode": "cors",
+                "x-arr-log-id": "69070262-6629-44e7-8f75-22ff8161272d",
+                "client-ip": "3.248.255.18:38270",
+                "disguised-host": "usermetrics.net",
+                "x-site-deployment-id": "UserMetrics",
+                "was-default-hostname": "usermetrics-aeg7gdadcha6hkh4.centralus-01.azurewebsites.net",
+                "x-forwarded-proto": "https",
+                "x-appservice-proto": "https",
+                "x-arr-ssl": "2048|256|CN=GeoTrust Global TLS RSA4096 SHA256 2022 CA1, O=\"DigiCert, Inc.\", C=US|CN=usermetrics.net",
+                "x-forwarded-tlsversion": "1.3",
+                "x-forwarded-for": "3.248.255.18:38270",
+                "x-original-url": "/health",
+                "x-waws-unencoded-url": "/health",
+                "x-client-ip": "3.248.255.18",
+                "x-client-port": "38270"
+            }
+        }
+    }
+}
