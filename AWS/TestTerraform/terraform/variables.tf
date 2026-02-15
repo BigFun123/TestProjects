@@ -21,8 +21,18 @@ variable "node_lambda_package" {
   type        = string
 }
 
-variable "node_lambda_fetch_url" {
-  description = "URL to fetch in Node.js Lambda"
+  description = "URL to fetch in Node.js Lambda" {
   type        = string
   default     = "https://usermetrics.net/health"
 }
+
+  description = "Greeting name for WebApiHello appsettings.json"
+  type        = string
+  default     = "World"
+
+variable "another_one" {
+  description = "AnotherOne value for WebApiHello appsettings.json"
+  type        = string
+  default     = "SomeValue"
+}
+

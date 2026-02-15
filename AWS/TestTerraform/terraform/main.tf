@@ -80,6 +80,22 @@ resource "aws_cloudwatch_event_rule" "every_3_hours" {
   schedule_expression = "rate(3 hours)"
 }
 
+# Generate appsettings.json for WebApiHello using greeting_name variable
+resource "local_file" "webapihello_appsettings" {
+  filename = "../WebApiHello/appsettings.json"
+  content = jsonencode({
+    Logging = {
+      LogLevel = {
+        Default = "Information"
+        "Microsoft.AspNetCore" = "Warning"
+      }
+    }
+    AllowedHosts = "*"
+    GreetingName = var.greeting_name
+    AnotherOne = var.another_one
+  })
+}
+
 resource "aws_cloudwatch_event_target" "lambda_target" {
   rule      = aws_cloudwatch_event_rule.every_3_hours.name
   target_id = "lambda"

@@ -19,7 +19,7 @@ class Program
             .CreateLogger();
 
         // Use a minimal message and add a custom property to ensure GELF compliance
-        Log.Information("hello from dotnet 8 serilog {host}", Environment.MachineName);
+        Log.Information("hello from dotnet 8 serilog ...{host}", Environment.MachineName);
         Log.CloseAndFlush();
         Console.WriteLine("Message sent to Graylog via Serilog.");
     }
